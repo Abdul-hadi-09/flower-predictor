@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Iris Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+   .container{max-width:720px;margin:40px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.08);color:#111}
+    label{display:block;margin-top:12px;font-weight:600}
+    input[type="number"]{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:6px}
+    .row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .actions{margin-top:16px;display:flex;gap:12px}
+    button{padding:10px 14px;border-radius:8px;border:0;background:#2563eb;color:#fff;cursor:pointer}
+    .result{margin-top:14px;padding:12px;border-radius:8px;background:#f1f5f9;border:1px dashed rgba(0,0,0,.06);font-weight:700;min-height:28px}
+    .muted{color:#6b7280;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-labelledby="title">
+    <h1 id="title">Iris Flower Predictor</h1>
+    <p class="muted">Enter the four measurements and press Predict.</p>
+
+    <form method="post" action="/">
+      <div class="row">
+        <div>
+          <label for="sepal_length">Sepal length (cm)</label>
+          <input step="any" inputmode="decimal" name="sepal_length" id="sepal_length" type="number"
+                 value="{{ request.form.sepal_length or '' }}" required>
+        </div>
+        <div>
+          <label for="sepal_width">Sepal width (cm)</label>
+          <input step="any" inputmode="decimal" name="sepal_width" id="sepal_width" type="number"
+                 value="{{ request.form.sepal_width or '' }}" required>
+        </div>
+
+        <div>
+          <label for="petal_length">Petal length (cm)</label>
+          <input step="any" inputmode="decimal" name="petal_length" id="petal_length" type="number"
+                 value="{{ request.form.petal_length or '' }}" required>
+        </div>
+        <div>
+          <label for="petal_width">Petal width (cm)</label>
+          <input step="any" inputmode="decimal" name="petal_width" id="petal_width" type="number"
+                 value="{{ request.form.petal_width or '' }}" required>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Predict</button>
+        <button type="reset" id="resetBtn" style="background:#ef4444">Reset</button>
+      </div>
+    </form>
+
+    <div id="result" class="result" role="status" aria-live="polite">
+      {% if prediction_text %}
+        {{ prediction_text }}
+      {% else %}
+        No prediction yet.
+      {% endif %}
+    </div>
+
+    <p class="muted" style="margin-top:10px">Model loaded from model.pkl — must exist in the app folder.</p>
+  </main>
+
+  <script>
+    // Ensure previous prediction is cleared (or replaced by placeholder) as soon as the user edits any input.
+    document.addEventListener('DOMContentLoaded', function () {
+      const resultEl = document.getElementById('result');
+      const inputs = document.querySelectorAll('input[name="sepal_length"], input[name="sepal_width"], input[name="petal_length"], input[name="petal_width"]');
+      const initialText = (resultEl && resultEl.textContent.trim()) ? resultEl.textContent.trim() : 'No prediction yet.';
+
+      function clearResult() {
+        // Replace previous answer with placeholder immediately (prevents concatenation behavior)
+        if (!resultEl) return;
+        // if there is a prediction (non-placeholder), reset to the neutral text
+        if (resultEl.textContent.trim() !== '' && resultEl.textContent.trim() !== 'No prediction yet.') {
+          resultEl.textContent = 'No prediction yet.';
+        }
+      }
+
+      inputs.forEach(input => {
+        input.addEventListener('input', clearResult);
+        input.addEventListener('focus', clearResult);
+      });
+
+      const resetBtn = document.getElementById('resetBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (resultEl) resultEl.textContent = 'No prediction yet.';
+          // also clear all input values explicitly (some browsers may reset visually but not value attribute)
+          inputs.forEach(i => i.value = '');
+        });
+      }
+
+      // keep initial placeholder if empty on load
+      if (resultEl && resultEl.textContent.trim() === '') {
+        resultEl.textContent = 'No prediction yet.';
+      }
+    });
+  </script>
+</body>
+</html>
